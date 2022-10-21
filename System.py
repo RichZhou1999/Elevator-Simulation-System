@@ -52,6 +52,7 @@ class System:
                             del self.run_passengers[i]
                             get_out_passengers.append(passenger)
                     self.past_passengers += get_out_passengers
+
                     pass
                 else:
                     # new passengers come in
@@ -73,6 +74,7 @@ class System:
         for i in range(number):
             destination_floor = np.random.randint(1, max_floor+1)
             temp_p = Passenger(uuid.uuid4(), 0, destination_floor)
+            self.adjust_request_signal(destination_floor, "up", signal_type="add")
             passengers.append(temp_p)
         self.wait_passengers += passengers
 
@@ -85,6 +87,7 @@ class System:
             for j in range(number):
                 temp_p = Passenger(uuid.uuid4(), i, 0)
                 passengers.append(temp_p)
+        self.adjust_request_signal(0, "down", signal_type="add")
         self.wait_passengers += passengers
 
     def adjust_request_signal(self, floor, direction, signal_type="add"):

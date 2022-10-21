@@ -15,6 +15,7 @@ class Elevator:
         self._state = "wait"
         self.cur_waited_time = 0
         self.destination = None
+        self._direction = None
     @property
     def state(self):
         return self._state
@@ -22,6 +23,18 @@ class Elevator:
     @property
     def capacity(self):
         return self._capacity
+
+    @property
+    def max_speed(self):
+        return self._max_speed
+
+    @property
+    def direction(self):
+        return self._direction
+
+    def set_direction(self, direction):
+        self._direction = direction
+
 
     def set_state(self, state):
         self._state = state

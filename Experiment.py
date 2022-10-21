@@ -4,6 +4,8 @@ from System import System
 from Controller import Controller
 '''
 Construct the system gradually with building, elevator, controller
+direction: up is positive and down is negative applying to acceleration, 
+speed and height
 '''
 
 height_floor_dict = {0: 0,

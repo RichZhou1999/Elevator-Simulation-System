@@ -18,6 +18,17 @@ class System:
         self.past_passengers = []
         self.request_signal_list_up = []
         self.request_signal_list_down = []
+        self.elevator_max_wait_time = system_para["elevator_max_wait_time"]
+
+    def reset(self):
+        height_floor_dict = self.building.height_floor_dict
+        floor_num = len(height_floor_dict.values())
+        for elevator in self.elevators:
+            elevator.request_floor_list = [0] * floor_num
+        self.request_signal_list_down = [0] * floor_num
+        self.request_signal_list_up = [0] * floor_num
+
+
 
     def add_elevator(self, elevator, name):
         if name not in self.elevators:
@@ -26,34 +37,51 @@ class System:
             raise Exception("name already exist")
 
     def run(self):
+        self.reset()
         for i in range(self.simulation_time):
             self.passenger_generator_up()
             self.passenger_generator_down()
-            self.adjust_elevator_state()
             self.adjust_passenger_state()
+            self.adjust_elevator_state()
             self.simulation_time += 1
+
+    def check_elevator_wait_state(self, elevator):
+        if elevator.state == "wait":
+            if elevator.cur_waited_time < self.elevator_max_wait_time:
+                elevator.cur_waited_time += 1
+                return True
+            else:
+                elevator.state == "run"
+                return False
 
     def adjust_elevator_state(self):
         accelerations = Controller.get_acceleration(self)
         for i in range(len(self.elevators)):
             elevator = self.elevators[i]
+            if self.check_elevator_wait_state(elevator):
+                continue
             elevator.update(self.simulation_step, accelerations[i])
+            if abs(elevator.current_height - self.building.floor_height_dict[elevator.destination_floor]):
+                elevator.set_state("wait")
+                elevator.cur_waited_time = 0
 
     def adjust_passenger_state(self):
         for elevator in self.elevators:
             if elevator.state == "wait":
                 # passengers come out when get to the destination
                 if elevator.cur_waited_time == 0:
+                    self.adjust_request_signal(self.building.height_floor_dict[elevator.current_height],
+                                               elevator.direction,
+                                               signal_type="minus")
                     get_out_passengers = []
-                    for i in range(len(self.run_passengers)):
-                        passenger = self.run_passengers[i]
+                    for i in range(len(elevator.current_passenger_list)):
+                        passenger = elevator.current_passenger_list[i]
                         if passenger.destination_floor == self.building.height_floor_dict[elevator.current_height] and \
                                 passenger.state == "run":
-                            del self.run_passengers[i]
+                            del elevator.current_passenger_list[i]
                             get_out_passengers.append(passenger)
+                            elevator.current_accommodation -= 1
                     self.past_passengers += get_out_passengers
-
-                    pass
                 else:
                     # new passengers come in
                     get_in_passengers = []
@@ -64,8 +92,8 @@ class System:
                             passenger.state = "run"
                             get_in_passengers.append(passenger)
                             elevator.current_accommodation += 1
-                    self.run_passengers = self.run_passengers + get_in_passengers
-
+                            del self.wait_passengers[i]
+                    elevator.current_passenger_list = elevator.current_passenger_list + get_in_passengers
 
     def passenger_generator_up(self):
         passengers = []

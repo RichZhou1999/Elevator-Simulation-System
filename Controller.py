@@ -62,10 +62,11 @@ class Controller_one_elevator(Controller):
                 return f(*args, **kwargs)
             def zero():
                 return 0
-            if request_signal_list_up.count(1) == 0 and request_signal_list_down==0:
+            if request_signal_list_up.count(1) == 0 and request_signal_list_down == 0:
                 return zero
             else:
                 return inner
+
         @check_has_signal(request_signal_list_up, request_signal_list_down, cur_floor)
         def get_upper_destination(request_signal_list_up , request_signal_list_down, cur_floor):
             request_upper = request_signal_list_up[cur_floor + 1:]
@@ -99,6 +100,7 @@ class Controller_one_elevator(Controller):
             cur_height = elevator.current_height
             cur_speed = elevator.cur_speed
             destination_floor = self.get_destination_floor(system, elevator)
+            elevator.destination_floor = destination_floor
             destination_height = system.building.floor_height_dict[destination_floor]
             max_acceleration = elevator.acceleration
             max_speed = elevator.max_speed

@@ -14,8 +14,10 @@ class Elevator:
         self.current_height = 0
         self._state = "wait"
         self.cur_waited_time = 0
-        self.destination = None
+        self.destination_floor = None
         self._direction = None
+        self.request_floor_list = []
+        self.current_passenger_list = []
     @property
     def state(self):
         return self._state
@@ -43,9 +45,17 @@ class Elevator:
         self.adjust_acceleration(acceleration=kwargs["acceleration"])
         self.adjust_height(simulation_step)
         self.adjust_speed(simulation_step)
+        self.adjust_request_floor_list()
 
+    def adjust_request_floor_list(self):
+        for passenger in self.current_passenger_list:
+            self.request_floor_list[passenger.destination_floor] = 1
     def adjust_acceleration(self, acceleration):
         self.acceleration = acceleration
+        if acceleration > 0:
+            self.set_direction("up")
+        elif acceleration < 0:
+            self.set_direction("down")
 
     def adjust_speed(self, simulation_step):
         self.cur_speed += self.acceleration * simulation_step

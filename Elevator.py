@@ -1,33 +1,38 @@
-from Controller import Controller
-
+import numpy as np
 '''
 
 state: wait or running
 
 '''
-
-
 class Elevator:
-    def __init__(self, capacity, max_speed, controller):
-        self.capacity = capacity
-        self.max_speed = max_speed
-        self.controller = controller
+    def __init__(self, capacity, max_speed):
+        self._capacity = capacity
+        self._max_speed = max_speed
         self.cur_speed = 0
         self.acceleration = 0
         self.current_accommodation = 0
         self.current_height = 0
-        self.state = "wait"
+        self._state = "wait"
         self.cur_waited_time = 0
         self.destination = None
+    @property
+    def state(self):
+        return self._state
 
-    def update(self, system):
-        simulation_step = system.simulation_step
-        self.adjust_acceleration()
+    @property
+    def capacity(self):
+        return self._capacity
+
+    def set_state(self, state):
+        self._state = state
+
+    def update(self, simulation_step, **kwargs):
+        self.adjust_acceleration(acceleration=kwargs["acceleration"])
         self.adjust_height(simulation_step)
         self.adjust_speed(simulation_step)
 
-    def adjust_acceleration(self, system):
-        self.acceleration = self.controller.get_acceleration(system)
+    def adjust_acceleration(self, acceleration):
+        self.acceleration = acceleration
 
     def adjust_speed(self, simulation_step):
         self.cur_speed += self.acceleration * simulation_step

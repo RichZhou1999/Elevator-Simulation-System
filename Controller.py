@@ -15,3 +15,7 @@ class Controller:
 "add new controllers and algorithms here"
 class XXXController(Controller):
     pass
+
+class Controller_one_elevator(Controller):
+    def get_acceleration(self, system):
+        height_floor_dict = system.building.height_floor_dict

@@ -1,6 +1,6 @@
 import numpy as np
 from Passenger import Passenger
-from Controller import Controller
+from Controller import Controller, Controller_one_elevator
 import uuid
 
 
@@ -10,14 +10,17 @@ class System:
         self.arrival_rate_down = system_para["arrival_rate_down"]
         self.simulation_time = system_para["simulation_time"]
         self.simulation_step = system_para["simulation_step"]
+        self.elevator_max_wait_time = system_para["elevator_max_wait_time"]
         self.building = system_para["building"]
-        self.controller = Controller()
-        self.elevators = {}
+        self.controller = system_para["controller"]()
+        self.elevators = []
+        self.elevator_name_list = []
         self.wait_passengers = []
         self.run_passengers = []
         self.past_passengers = []
         self.request_signal_list_up = []
         self.request_signal_list_down = []
+        self.current_simulation_time = 0
         self.elevator_max_wait_time = system_para["elevator_max_wait_time"]
 
     def reset(self):
@@ -27,12 +30,14 @@ class System:
             elevator.request_floor_list = [0] * floor_num
         self.request_signal_list_down = [0] * floor_num
         self.request_signal_list_up = [0] * floor_num
+        self.wait_passengers = []
+        self.run_passengers = []
+        self.past_passengers = []
 
-
-
-    def add_elevator(self, elevator, name):
-        if name not in self.elevators:
-            self.elevators[name] = elevator
+    def add_elevator(self, elevator):
+        if elevator.name not in self.elevator_name_list:
+            self.elevator_name_list.append(elevator.name)
+            self.elevators.append(elevator)
         else:
             raise Exception("name already exist")
 
@@ -43,7 +48,8 @@ class System:
             self.passenger_generator_down()
             self.adjust_passenger_state()
             self.adjust_elevator_state()
-            self.simulation_time += 1
+            self.current_simulation_time += 1
+            print(self.current_simulation_time)
 
     def check_elevator_wait_state(self, elevator):
         if elevator.state == "wait":
@@ -55,15 +61,17 @@ class System:
                 return False
 
     def adjust_elevator_state(self):
-        accelerations = Controller.get_acceleration(self)
+        accelerations = self.controller.get_acceleration(self)
         for i in range(len(self.elevators)):
             elevator = self.elevators[i]
             if self.check_elevator_wait_state(elevator):
                 continue
-            elevator.update(self.simulation_step, accelerations[i])
-            if abs(elevator.current_height - self.building.floor_height_dict[elevator.destination_floor]):
+            elevator.update(self.simulation_step, acceleration=accelerations[i])
+            if abs(elevator.current_height - self.building.floor_height_dict[elevator.destination_floor]) <= 1:
                 elevator.set_state("wait")
                 elevator.cur_waited_time = 0
+                elevator.current_height = self.building.floor_height_dict[elevator.destination_floor]
+            print(elevator.current_height)
 
     def adjust_passenger_state(self):
         for elevator in self.elevators:
@@ -85,19 +93,21 @@ class System:
                 else:
                     # new passengers come in
                     get_in_passengers = []
+                    temp_wait_passengers = []
                     for i in range(len(self.wait_passengers)):
                         passenger = self.wait_passengers[i]
-                        if passenger.starting_floor == self.building.height_floor_dict[elevator.current_height] and \
+                        if passenger.starting_floor == self.building.height_floor_dict[round(elevator.current_height)] and \
                                 passenger.state == "wait" and elevator.current_accommodation < elevator.capacity:
                             passenger.state = "run"
                             get_in_passengers.append(passenger)
                             elevator.current_accommodation += 1
-                            del self.wait_passengers[i]
+                        else:
+                            temp_wait_passengers.append(passenger)
                     elevator.current_passenger_list = elevator.current_passenger_list + get_in_passengers
-
+                    self.wait_passengers = temp_wait_passengers
     def passenger_generator_up(self):
         passengers = []
-        max_floor = self.building.max_floor
+        max_floor = len(self.building.height_floor_dict.keys()) - 1
         number = np.random.poisson(self.arrival_rate_up)
         for i in range(number):
             destination_floor = np.random.randint(1, max_floor+1)
@@ -108,7 +118,7 @@ class System:
 
     def passenger_generator_down(self):
         passengers = []
-        max_floor = self.building.max_floor
+        max_floor = len(self.building.height_floor_dict.keys()) - 1
         single_floor_arrival_rate = self.arrival_rate_down / (max_floor - 1)
         for i in range(1, max_floor):
             number = np.random.poisson(single_floor_arrival_rate)

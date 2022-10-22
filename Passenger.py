@@ -9,6 +9,7 @@ import copy
     state: "wait"(wait for the elevator to come) or "run"( on the elevator) or "finished" 
 '''
 
+
 class Passenger:
     def __init__(self, pid, starting_floor, destination_floor):
         self.pid = pid

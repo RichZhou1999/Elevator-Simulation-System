@@ -48,6 +48,7 @@ class Elevator:
         self.adjust_height(simulation_step)
         self.adjust_speed(simulation_step)
         self.adjust_request_floor_list()
+        print("speed:", self.cur_speed)
 
     def adjust_request_floor_list(self):
         for passenger in self.current_passenger_list:

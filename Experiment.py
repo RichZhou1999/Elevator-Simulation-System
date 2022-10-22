@@ -20,7 +20,7 @@ building = Building(height_floor_dict)
 elevator = Elevator(capacity=16,
                     max_speed=10,
                     name="elevator1",
-                    acceleration=2)
+                    acceleration=0.5)
 
 system_para = {"arrival_rate_up": 3,
                "arrival_rate_down": 3,
@@ -28,7 +28,8 @@ system_para = {"arrival_rate_up": 3,
                "simulation_time": 1000,
                "simulation_step": 1,
                "elevator_max_wait_time": 30,
-               "controller": Controller_one_elevator}
+               "controller": Controller_one_elevator,
+               "safety_deceleration_distance": 1}
 
 system = System(system_para)
 system.add_elevator(elevator)

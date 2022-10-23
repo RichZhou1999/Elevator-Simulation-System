@@ -1,7 +1,7 @@
 import numpy as np
 '''
 
-state: wait or running
+state: wait or run
 
 '''
 
@@ -69,6 +69,6 @@ class Elevator:
     def adjust_height(self, simulation_step):
         self.current_height = self.current_height +\
                               self.cur_speed * simulation_step + self.acceleration/2*simulation_step**2
-        if abs(self.current_height) < 1e-2:
-            self.current_height = 0
+        if abs(self.current_height-round(self.current_height)) < 1e-2:
+            self.current_height = round(self.current_height)
 

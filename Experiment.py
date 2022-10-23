@@ -18,16 +18,16 @@ height_floor_dict = {0: 0,
 building = Building(height_floor_dict)
 
 elevator = Elevator(capacity=16,
-                    max_speed=5,
+                    max_speed=2,
                     name="elevator1",
                     max_acceleration=0.5)
 
-system_para = {"arrival_rate_up": 3,
-               "arrival_rate_down": 3,
+system_para = {"arrival_rate_up": 0.1,
+               "arrival_rate_down": 0.1,
                "building": building,
                "simulation_time": 1000,
                "simulation_step": 1,
-               "elevator_max_wait_time": 30,
+               "elevator_max_wait_time": 10,
                "controller": Controller_one_elevator,
                "safety_deceleration_distance": 1}
 

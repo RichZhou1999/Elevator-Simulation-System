@@ -83,10 +83,10 @@ class Controller_one_elevator(Controller):
         min_deceleration_distance = calculate_min_deceleration_distance(cur_speed, max_acceleration)
         cur_height = elevator.current_height
         if cur_floor + 1 < len(floor_height_list) and elevator.direction == "up":
-            if abs(cur_height - system.building.floor_height_dict[cur_floor + 1]) < min_deceleration_distance:
+            if abs(cur_height - system.building.floor_height_dict[cur_floor + 1]) - min_deceleration_distance < -1e-2:
                 cur_floor += 1
         if cur_floor - 1 >= 0 and cur_floor + 1 < len(floor_height_list) and elevator.direction == "down":
-            if abs(cur_height - system.building.floor_height_dict[cur_floor + 1]) < min_deceleration_distance:
+            if abs(cur_height - system.building.floor_height_dict[cur_floor - 1]) - min_deceleration_distance < -1e-2:
                 cur_floor -= 1
         print("cur_floor:", cur_floor)
 
@@ -94,42 +94,91 @@ class Controller_one_elevator(Controller):
                                   request_signal_list_down,
                                   cur_floor,
                                   elevator_request_signal_list):
-            request_upper = request_signal_list_up[cur_floor + 1:]
+            request_down = request_signal_list_down[cur_floor + 1:]
             elevator_request_signal_list_upper = elevator_request_signal_list[cur_floor + 1:]
-            if request_upper.count(1) and elevator_request_signal_list_upper.count(1):
-                return min(request_upper.index(1), elevator_request_signal_list_upper.index(1)) + cur_floor + 1
-            elif (not elevator_request_signal_list_upper.count(1)) and (not request_upper.count(1)):
-                elevator.set_direction("down")
-                print("elevator direction switch to down")
-                return get_lower_destination(request_signal_list_up, request_signal_list_down, cur_floor,
-                                             elevator_request_signal_list)
-            elif not elevator_request_signal_list_upper.count(1):
-                return request_upper.index(1) + cur_floor + 1
-            elif not request_upper.count(1):
+            if elevator_request_signal_list_upper.count(1):
                 return elevator_request_signal_list_upper.index(1) + cur_floor + 1
+            elif request_down.count(1):
+                max_index = 0
+                for i in range(len(request_down)):
+                    if request_down[i] == 1:
+                        max_index = i
+                return max_index + cur_floor + 1
+            else:
+                if elevator.current_height != 0:
+                    elevator.set_direction("down")
+                    print("elevator direction switch to down")
+                    return get_lower_destination(request_signal_list_up, request_signal_list_down, cur_floor,
+                                                elevator_request_signal_list)
+                else:
+                    return 0
+        # def get_upper_destination(request_signal_list_up,
+        #                           request_signal_list_down,
+        #                           cur_floor,
+        #                           elevator_request_signal_list):
+        #     request_upper = request_signal_list_up[cur_floor + 1:]
+        #     elevator_request_signal_list_upper = elevator_request_signal_list[cur_floor + 1:]
+        #     if request_upper.count(1) and elevator_request_signal_list_upper.count(1):
+        #         return min(request_upper.index(1), elevator_request_signal_list_upper.index(1)) + cur_floor + 1
+        #     elif (not elevator_request_signal_list_upper.count(1)) and (not request_upper.count(1)):
+        #         if elevator.current_height != 0:
+        #             elevator.set_direction("down")
+        #             print("elevator direction switch to down")
+        #             return get_lower_destination(request_signal_list_up, request_signal_list_down, cur_floor,
+        #                                         elevator_request_signal_list)
+        #         else:
+        #             return 0
+        #     elif not elevator_request_signal_list_upper.count(1):
+        #         return request_upper.index(1) + cur_floor + 1
+        #     elif not request_upper.count(1):
+        #         return elevator_request_signal_list_upper.index(1) + cur_floor + 1
         def get_lower_destination(request_signal_list_up,
                                   request_signal_list_down,
                                   cur_floor,
                                   elevator_request_signal_list):
-            request_lower = request_signal_list_down[0: cur_floor + 1]
+            request_down = request_signal_list_down[0: cur_floor + 1]
             elevator_request_signal_list_lower = elevator_request_signal_list[0: cur_floor + 1]
-            temp1 = request_lower[::-1]
+            temp1 = request_down[::-1]
             temp2 = elevator_request_signal_list_lower[::-1]
-            if request_lower.count(1) and elevator_request_signal_list_lower.count(1):
+            if request_down.count(1) and elevator_request_signal_list_lower.count(1):
                 return cur_floor - min(temp1.index(1), temp2.index(1))
-            elif (not request_lower.count(1)) and (not elevator_request_signal_list_lower.count(1)):
+            elif elevator_request_signal_list_lower.count(1):
+                return cur_floor - temp2.index(1)
+            elif request_down.count(1):
+                return cur_floor - temp1.index(1)
+            else:
                 if cur_floor == 0 and elevator.current_height == 0:
                     elevator.set_direction("up")
                     print("elevator direction switch to up")
                     return get_upper_destination(request_signal_list_up, request_signal_list_down, cur_floor,
                                                  elevator_request_signal_list)
                 else:
-                    print("111111111111111111111")
                     return 0
-            elif not request_lower.count(1):
-                return cur_floor - temp2.index(1)
-            elif not elevator_request_signal_list_lower.count(1):
-                return cur_floor - temp1.index(1)
+
+
+        # def get_lower_destination(request_signal_list_up,
+        #                           request_signal_list_down,
+        #                           cur_floor,
+        #                           elevator_request_signal_list):
+        #     request_lower = request_signal_list_down[0: cur_floor + 1]
+        #     elevator_request_signal_list_lower = elevator_request_signal_list[0: cur_floor + 1]
+        #     temp1 = request_lower[::-1]
+        #     temp2 = elevator_request_signal_list_lower[::-1]
+        #     if request_lower.count(1) and elevator_request_signal_list_lower.count(1):
+        #         return cur_floor - min(temp1.index(1), temp2.index(1))
+        #     elif (not request_lower.count(1)) and (not elevator_request_signal_list_lower.count(1)):
+        #         if cur_floor == 0 and elevator.current_height == 0:
+        #             elevator.set_direction("up")
+        #             print("elevator direction switch to up")
+        #             return get_upper_destination(request_signal_list_up, request_signal_list_down, cur_floor,
+        #                                          elevator_request_signal_list)
+        #         else:
+        #             print("111111111111111111111")
+        #             return 0
+        #     elif not request_lower.count(1):
+        #         return cur_floor - temp2.index(1)
+        #     elif not elevator_request_signal_list_lower.count(1):
+        #         return cur_floor - temp1.index(1)
 
         if elevator.direction == "up" or elevator.direction == None:
             destination_floor = get_upper_destination(request_signal_list_up,
@@ -241,7 +290,7 @@ class Controller_one_elevator(Controller):
                                                   safety_deceleration_distance
                                                   )
             accelerations.append(acceleration)
-        print(accelerations)
+        print("accelerations: ", accelerations)
         return accelerations
 
     # def get_acceleration(self, system):

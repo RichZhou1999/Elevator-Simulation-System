@@ -44,7 +44,8 @@ class Controller:
         acceleraion = 0
         delta_height = destination_height - cur_height
         min_deceleration_distance = calculate_min_deceleration_distance(cur_speed,
-                                                                        max_acceleration) + safety_deceleration_distance
+                                                                        max_acceleration) \
+                                    + safety_deceleration_distance + abs(cur_speed)
         print("delta:", delta_height)
         if delta_height == 0:
             return 0
@@ -59,7 +60,10 @@ class Controller:
         elif abs(delta_height) <= min_deceleration_distance:
             for i in range(1, max_deceleration_time + 1):
                 if abs(cur_speed / i) < abs(max_acceleration):
-                    acceleraion = -cur_speed ** 2 / 2 / delta_height * cur_speed / abs(cur_speed)
+                    if cur_speed > 0:
+                        acceleraion = -cur_speed ** 2 / 2 / delta_height * cur_speed / abs(cur_speed)
+                    elif cur_speed < 0:
+                        acceleraion = -cur_speed ** 2 / 2 / delta_height
                     break
         return acceleraion
 
@@ -81,7 +85,7 @@ class Controller_one_elevator(Controller):
         if cur_floor + 1 < len(floor_height_list) and elevator.direction == "up":
             if abs(cur_height - system.building.floor_height_dict[cur_floor + 1]) < min_deceleration_distance:
                 cur_floor += 1
-        if cur_floor - 1 >= 0 and elevator.direction == "down":
+        if cur_floor - 1 >= 0 and cur_floor + 1 < len(floor_height_list) and elevator.direction == "down":
             if abs(cur_height - system.building.floor_height_dict[cur_floor + 1]) < min_deceleration_distance:
                 cur_floor -= 1
         print("cur_floor:", cur_floor)
@@ -95,7 +99,7 @@ class Controller_one_elevator(Controller):
             if request_upper.count(1) and elevator_request_signal_list_upper.count(1):
                 return min(request_upper.index(1), elevator_request_signal_list_upper.index(1)) + cur_floor + 1
             elif (not elevator_request_signal_list_upper.count(1)) and (not request_upper.count(1)):
-                elevator.set_direction("Down")
+                elevator.set_direction("down")
                 print("elevator direction switch to down")
                 return get_lower_destination(request_signal_list_up, request_signal_list_down, cur_floor,
                                              elevator_request_signal_list)
@@ -114,7 +118,14 @@ class Controller_one_elevator(Controller):
             if request_lower.count(1) and elevator_request_signal_list_lower.count(1):
                 return cur_floor - min(temp1.index(1), temp2.index(1))
             elif (not request_lower.count(1)) and (not elevator_request_signal_list_lower.count(1)):
-                return 0
+                if cur_floor == 0 and elevator.current_height == 0:
+                    elevator.set_direction("up")
+                    print("elevator direction switch to up")
+                    return get_upper_destination(request_signal_list_up, request_signal_list_down, cur_floor,
+                                                 elevator_request_signal_list)
+                else:
+                    print("111111111111111111111")
+                    return 0
             elif not request_lower.count(1):
                 return cur_floor - temp2.index(1)
             elif not elevator_request_signal_list_lower.count(1):
@@ -220,7 +231,7 @@ class Controller_one_elevator(Controller):
             destination_floor = self.get_destination_floor(system, elevator)
             elevator.destination_floor = destination_floor
             destination_height = system.building.floor_height_dict[destination_floor]
-            max_acceleration = elevator.acceleration
+            max_acceleration = elevator.max_acceleration
             max_speed = elevator.max_speed
             acceleration = self.calculate_acceleration(cur_height,
                                                   destination_height,
@@ -230,6 +241,7 @@ class Controller_one_elevator(Controller):
                                                   safety_deceleration_distance
                                                   )
             accelerations.append(acceleration)
+        print(accelerations)
         return accelerations
 
     # def get_acceleration(self, system):

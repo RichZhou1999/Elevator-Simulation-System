@@ -48,9 +48,11 @@ class System:
         for i in range(self.simulation_time):
             self.passenger_generator_up()
             self.passenger_generator_down()
-            self.adjust_passenger_state()
             self.adjust_elevator_state()
+            self.adjust_passenger_state()
             self.current_simulation_time += 1
+            print("state:", self.elevators[0].state)
+            print("direction:", self.elevators[0].direction)
             print( "time: ", self.current_simulation_time)
             print("-"*30)
 
@@ -60,20 +62,35 @@ class System:
                 elevator.cur_waited_time += 1
                 return True
             else:
-                elevator.state == "run"
+                elevator.set_state("run")
                 return False
 
     def adjust_elevator_state(self):
+        for i in range(len(self.elevators)):
+            elevator = self.elevators[i]
+            elevator.adjust_height(self.simulation_step)
+            elevator.adjust_speed(self.simulation_step)
+            elevator.adjust_request_floor_list()
+            # print("11", elevator.destination_floor)
+            # print(elevator.current_height)
+            if elevator.destination_floor and elevator.current_height - self.building.floor_height_dict[elevator.destination_floor] == 0 and \
+                    elevator.state != "wait":
+                elevator.set_state("wait")
+                elevator.adjust_acceleration(acceleration=0)
+                elevator.cur_waited_time = 0
+                elevator.current_height = self.building.floor_height_dict[elevator.destination_floor]
+                continue
+            if self.check_elevator_wait_state(elevator):
+                continue
+            # elevator.adjust_height(self.simulation_step)
+            # elevator.adjust_speed(self.simulation_step)
+            # elevator.adjust_request_floor_list()
         accelerations = self.controller.get_acceleration(self)
         for i in range(len(self.elevators)):
             elevator = self.elevators[i]
-            if self.check_elevator_wait_state(elevator):
+            if elevator.state == "wait":
                 continue
-            elevator.update(self.simulation_step, acceleration=accelerations[i])
-            if abs(elevator.current_height - self.building.floor_height_dict[elevator.destination_floor]) <= 0.1:
-                elevator.set_state("wait")
-                elevator.cur_waited_time = 0
-                elevator.current_height = self.building.floor_height_dict[elevator.destination_floor]
+            elevator.adjust_acceleration(acceleration=accelerations[i])
             print("height: ", elevator.current_height)
 
     def adjust_passenger_state(self):

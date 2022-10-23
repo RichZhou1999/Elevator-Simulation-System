@@ -18,9 +18,9 @@ height_floor_dict = {0: 0,
 building = Building(height_floor_dict)
 
 elevator = Elevator(capacity=16,
-                    max_speed=10,
+                    max_speed=5,
                     name="elevator1",
-                    acceleration=0.5)
+                    max_acceleration=0.5)
 
 system_para = {"arrival_rate_up": 3,
                "arrival_rate_down": 3,

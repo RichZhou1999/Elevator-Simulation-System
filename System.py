@@ -62,8 +62,13 @@ class System:
             # destinations of passengers in the elevator
             for passenger in self.elevators[0].current_passenger_list:
                 passenger_des.append(passenger.destination_floor)
-            print("destination_for_passengers_inside", passenger_des)
+            print("destination_for_passengers_inside:", passenger_des)
             print("-" * 30)
+        wait_time = []
+        for passenger in self.past_passengers:
+            print(passenger)
+            wait_time.append(passenger.get_on_elevator_time - passenger.start_time)
+        print("average_wait_time: ", np.mean(wait_time))
 
     def check_elevator_wait_state(self, elevator):
         # only wait for new coming passenger when elevator's waiting time is less than max waiting time
@@ -123,7 +128,7 @@ class System:
                                                signal_type="minus")
                     # inner request disappears
                     elevator.request_floor_list[self.building.height_floor_dict[elevator.current_height]] = 0
-                    print("Passengers come out at floor %s"%self.building.height_floor_dict[elevator.current_height])
+                    print("Passengers come out at floor %s" % self.building.height_floor_dict[elevator.current_height])
                     get_out_passengers = []
                     temp_cur_passengers = []
                     # passenger get off when reaching desination
@@ -133,7 +138,7 @@ class System:
                         passenger = elevator.current_passenger_list[i]
                         if passenger.destination_floor == self.building.height_floor_dict[elevator.current_height] and \
                                 passenger.state == "run":
-                            passenger.set_arrival_time(self.simulation_time)
+                            passenger.set_arrival_time(self.current_simulation_time)
                             get_out_passengers.append(passenger)
                             elevator.current_accommodation -= 1
                         else:
@@ -151,7 +156,7 @@ class System:
                         if passenger.starting_floor == self.building.height_floor_dict[elevator.current_height] and \
                                 passenger.state == "wait" and elevator.current_accommodation < elevator.capacity:
                             passenger.state = "run"
-                            passenger.set_get_on_elevator_time(self.simulation_time)
+                            passenger.set_get_on_elevator_time(self.current_simulation_time)
                             get_in_passengers.append(passenger)
                             elevator.current_accommodation += 1
                         else:
@@ -169,7 +174,7 @@ class System:
             temp_p = Passenger(uuid.uuid4(),
                                starting_floor=0,
                                destination_floor=destination_floor,
-                               start_time=self.simulation_time)
+                               start_time=self.current_simulation_time)
             self.adjust_request_signal(0, "up", signal_type="add")
             passengers.append(temp_p)
         self.wait_passengers += passengers
@@ -185,7 +190,7 @@ class System:
                 temp_p = Passenger(uuid.uuid4(),
                                    starting_floor=i,
                                    destination_floor=0,
-                                   start_time=self.simulation_time)
+                                   start_time=self.current_simulation_time)
                 passengers.append(temp_p)
                 self.adjust_request_signal(i, "down", signal_type="add")
         self.wait_passengers += passengers

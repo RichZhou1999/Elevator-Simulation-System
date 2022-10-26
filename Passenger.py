@@ -12,7 +12,7 @@ import copy
 
 class Passenger:
     def __init__(self, pid, starting_floor, destination_floor, start_time):
-        self.pid = pid
+        self._pid = pid
         self.starting_floor = starting_floor
         self.destination_floor = destination_floor
         self.state = "wait"
@@ -29,6 +29,10 @@ class Passenger:
         return self._get_on_elevator_time
 
     @property
+    def pid(self):
+        return self._pid
+
+    @property
     def arrival_time(self):
         return self._arrival_time
 
@@ -39,9 +43,13 @@ class Passenger:
         self._arrival_time = time
 
     def __repr__(self):
-        print("start_time:", self.start_time)
-        print("get_on_elevator_time:", self.get_on_elevator_time)
-        print("wait_time", self.get_on_elevator_time, self.start_time)
+        output = "pid" + str(self.pid) + "\n"
+        output += "start_time: " + str(self.start_time) + "\n"
+        output += "get_on_elevator_time: " + str(self.get_on_elevator_time) + "\n"
+        output += "wait time: " + str(self.get_on_elevator_time-self.start_time)  + "\n"
+        output += "-"*50
+        return output
+
 
 if __name__ == "__main__":
     test_p = Passenger(uuid.uuid4(),

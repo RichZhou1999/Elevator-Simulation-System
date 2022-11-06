@@ -1,7 +1,7 @@
-from Building import Building
-from Elevator import Elevator
-from System import System
-from Controller import Controller, Controller_one_elevator
+from Building.Building import Building
+from Elevator.Elevator import Elevator
+from System.System import System
+from Controller.Controller import Controller_one_elevator
 '''
 Construct the system gradually with building, elevator, controller
 direction: up is positive and down is negative applying to acceleration, 

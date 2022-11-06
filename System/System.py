@@ -1,6 +1,6 @@
 import numpy as np
-from Passenger import Passenger
-from Controller import Controller, Controller_one_elevator
+from Passenger.Passenger import Passenger
+from Controller.Controller import Controller, Controller_one_elevator
 import uuid
 
 

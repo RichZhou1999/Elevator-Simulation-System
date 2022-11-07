@@ -62,7 +62,7 @@ class Controller:
             return 0
         # special condition: elevator is initially static and has enough distance to deaccelerate
         if cur_speed == 0:
-            if delta_height > min_deceleration_distance:
+            if abs(delta_height) > min_deceleration_distance:
                 return max_acceleration * abs(delta_height) / delta_height
         # has enough distance to deaccelerate
         if abs(delta_height) > min_deceleration_distance:
@@ -81,7 +81,7 @@ class Controller:
                     elif cur_speed < 0:
                         acceleraion = -cur_speed ** 2 / 2 / delta_height
                     break
-        return acceleraion
+        return round(acceleraion, 4)
 
 
 "add new controllers and algorithms here"
@@ -163,7 +163,8 @@ class Controller_one_elevator(Controller):
         if cur_floor - 1 >= 0 and cur_floor + 1 < len(floor_height_list) and elevator.direction == "down":
             if abs(cur_height - system.building.floor_height_dict[cur_floor - 1]) - min_deceleration_distance < -1e-2:
                 cur_floor -= 1
-        print("cur_floor:", cur_floor)
+        elevator.cur_floor = cur_floor
+        # print("%s cur_floor:" % elevator.name, cur_floor)
 
         # def get_upper_destination(elevator, request_signal_list_up,
         #                           request_signal_list_down,
@@ -229,7 +230,7 @@ class Controller_one_elevator(Controller):
                                                            request_signal_list_down,
                                                            cur_floor,
                                                            elevator_request_signal_list)
-        print("destination_floor: ", destination_floor)
+        # print("%s: destination_floor: " % elevator.name, destination_floor)
         return destination_floor
 
     def get_acceleration(self, system):

@@ -58,29 +58,27 @@ class Elevator:
         self.adjust_request_floor_list()
         self.adjust_acceleration(acceleration=kwargs["acceleration"])
 
-        print("speed:", self.cur_speed)
-
     def adjust_request_floor_list(self):
         # set the list[floor] equals to 1 if inner passenger want to go
         for passenger in self.current_passenger_list:
             self.request_floor_list[passenger.destination_floor] = 1
 
     def adjust_acceleration(self, acceleration):
-        self.acceleration = acceleration
+        self.acceleration = round(acceleration, 4)
 
     def adjust_speed(self, simulation_step):
         # change speed with second, the speed can't beyond max_speed
-        self.cur_speed += self.acceleration * simulation_step
+        self.cur_speed = round(self.cur_speed + self.acceleration * simulation_step, 4)
         if abs(self.cur_speed) > abs(self.max_speed):
-            self.cur_speed = self.max_speed * abs(self.cur_speed)/self.cur_speed
-        if abs(self.cur_speed) < 1e-2:
+            self.cur_speed = round(self.max_speed * abs(self.cur_speed)/self.cur_speed, 4)
+        if abs(self.cur_speed) < 1e-3:
             self.cur_speed = 0
-        print("speed:", self.cur_speed)
+
 
     def adjust_height(self, simulation_step):
-        self.current_height = self.current_height +\
-                              self.cur_speed * simulation_step + self.acceleration/2*simulation_step**2
+        self.current_height = round(self.current_height +\
+                              self.cur_speed * simulation_step + self.acceleration/2*simulation_step**2, 4)
         # consider elevator reaches the floor if the absolute error equals to 0.01
-        if abs(self.current_height-round(self.current_height)) < 1e-2:
+        if abs(self.current_height-round(self.current_height)) < 1e-4:
             self.current_height = round(self.current_height)
 

@@ -44,28 +44,49 @@ class System:
         else:
             raise Exception("name already exist")
 
+
+    def print_state(self):
+        print("request_signal_list_up:", self.request_signal_list_up)
+        print("request_signal_list_down:", self.request_signal_list_down)
+        print("time: ", self.current_simulation_time)
+        for elevator in self.elevators:
+            print("-"*10+elevator.name+"-"*10)
+            print("state:", elevator.state)
+            print("direction:", elevator.direction)
+            print("current_floor:", elevator.cur_floor)
+            print("destination_floor:", elevator.destination_floor)
+            print("elevator_request_list: ", elevator.request_floor_list)
+            print("height: ", elevator.current_height)
+            print("speed:", elevator.cur_speed)
+            print("acceleration:", elevator.acceleration)
+            passenger_des = set()
+            for passenger in elevator.current_passenger_list:
+                passenger_des.add(passenger.destination_floor)
+            print("%s destination_for_passengers_inside:"% elevator.name, passenger_des)
+            print("-"*30)
+
     def run(self):
         self.reset()
         for i in range(self.simulation_time):
+            print("-" * 10 + str(self.current_simulation_time) + "-" * 10)
             self.passenger_generator_up()
             self.passenger_generator_down()
             self.adjust_passenger_state()
             self.adjust_elevator_state()
             self.current_simulation_time += 1
-            print("state:", self.elevators[0].state)
-            print("direction:", self.elevators[0].direction)
-            print("time: ", self.current_simulation_time)
-            print("elevator_request_list: ", self.elevators[0].request_floor_list)
-            print("request_signal_list_up:", self.request_signal_list_up)
-            print("request_signal_list_down:", self.request_signal_list_down)
+            # print("state:", self.elevators[0].state)
+            # print("direction:", self.elevators[0].direction)
+            # print("time: ", self.current_simulation_time)
+            # print("elevator_request_list: ", self.elevators[0].request_floor_list)
+            # print("request_signal_list_up:", self.request_signal_list_up)
+            # print("request_signal_list_down:", self.request_signal_list_down)
             passenger_des = []
             # destinations of passengers in the elevator
-            for elevator in self.elevators:
-                passenger_des = []
-                for passenger in elevator.current_passenger_list:
-                    passenger_des.append(passenger.destination_floor)
-                print("%s destination_for_passengers_inside:"% elevator.name, passenger_des)
-            print("-" * 30)
+            # for elevator in self.elevators:
+            #     passenger_des = set()
+            #     for passenger in elevator.current_passenger_list:
+            #         passenger_des.add(passenger.destination_floor)
+            self.print_state()
         wait_time = []
         for passenger in self.past_passengers:
             print(passenger)
@@ -86,7 +107,6 @@ class System:
     def adjust_elevator_state(self):
         for i in range(len(self.elevators)):
             elevator = self.elevators[i]
-            print("elevator_name", elevator.name)
             # ith elevator is moving
             elevator.adjust_height(self.simulation_step)
             elevator.adjust_speed(self.simulation_step)
@@ -98,7 +118,7 @@ class System:
                     elevator.state != "wait":
                 cur_floor = self.building.height_floor_dict[elevator.current_height]
                 print("-" * 30)
-                print("cur_floor: ", cur_floor)
+                print("%s: cur_floor: "%elevator.name, cur_floor)
                 print("_" * 30)
                 self.adjust_request_signal(cur_floor, elevator.direction, signal_type="minus")
                 # arrive at cur_floor
@@ -118,7 +138,6 @@ class System:
             if elevator.state == "wait":
                 continue
             elevator.adjust_acceleration(acceleration=accelerations[i])
-            print("height: ", elevator.current_height)
 
     def adjust_passenger_state(self):
         for elevator in self.elevators:
@@ -131,7 +150,7 @@ class System:
                                                signal_type="minus")
                     # inner request disappears
                     elevator.request_floor_list[self.building.height_floor_dict[elevator.current_height]] = 0
-                    print("Passengers come out at floor %s" % self.building.height_floor_dict[elevator.current_height])
+                    print("%s: Passengers come out at floor %s" % (elevator.name, self.building.height_floor_dict[elevator.current_height]))
                     get_out_passengers = []
                     temp_cur_passengers = []
                     # passenger get off when reaching desination

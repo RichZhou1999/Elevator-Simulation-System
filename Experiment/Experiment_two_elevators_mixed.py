@@ -31,23 +31,25 @@ elevator2 = Elevator(capacity=16,
                     max_acceleration=0.5,
                     feasible_floor=feasible_floor)
 
-elevator3 = Elevator(capacity=16,
-                    max_speed=2,
-                    name="elevator3",
-                    max_acceleration=0.5,
-                    feasible_floor=feasible_floor)
+# elevator3 = Elevator(capacity=16,
+#                     max_speed=2,
+#                     name="elevator3",
+#                     max_acceleration=0.5,
+#                     feasible_floor=feasible_floor)
 
 system_para = {"arrival_rate_up": 0.1,
                "arrival_rate_down": 0.1,
                "building": building,
                "simulation_time": 1000,
                "simulation_step": 1,
-               "elevator_max_wait_time": 10,
+               "elevator_max_wait_time": 2,
                "controller": ControllerByTheWay,
                "safety_deceleration_distance": 1}
 
 system = System(system_para)
 system.add_elevator(elevator)
 system.add_elevator(elevator2)
-system.run()
+# system.add_elevator(elevator3)
+for i in range(1):
+    system.run()
 

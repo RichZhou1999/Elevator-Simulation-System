@@ -60,9 +60,11 @@ class System:
             print("request_signal_list_down:", self.request_signal_list_down)
             passenger_des = []
             # destinations of passengers in the elevator
-            for passenger in self.elevators[0].current_passenger_list:
-                passenger_des.append(passenger.destination_floor)
-            print("destination_for_passengers_inside:", passenger_des)
+            for elevator in self.elevators:
+                passenger_des = []
+                for passenger in elevator.current_passenger_list:
+                    passenger_des.append(passenger.destination_floor)
+                print("%s destination_for_passengers_inside:"% elevator.name, passenger_des)
             print("-" * 30)
         wait_time = []
         for passenger in self.past_passengers:
@@ -84,6 +86,7 @@ class System:
     def adjust_elevator_state(self):
         for i in range(len(self.elevators)):
             elevator = self.elevators[i]
+            print("elevator_name", elevator.name)
             # ith elevator is moving
             elevator.adjust_height(self.simulation_step)
             elevator.adjust_speed(self.simulation_step)

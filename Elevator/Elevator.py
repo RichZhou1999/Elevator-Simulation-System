@@ -7,7 +7,7 @@ state: wait or run
 
 
 class Elevator:
-    def __init__(self, capacity, max_speed, name, max_acceleration):
+    def __init__(self, capacity, max_speed, name, max_acceleration, feasible_floor=[]):
         self._capacity = capacity
         self._max_speed = max_speed
         self.cur_speed = 0
@@ -24,6 +24,11 @@ class Elevator:
         self.request_floor_list = []
         self.current_passenger_list = []
         self.name = name
+        self._feasible_floor = feasible_floor
+
+    @property
+    def feasible_floor(self):
+        return self._feasible_floor
     @property
     def state(self):
         return self._state
@@ -52,6 +57,7 @@ class Elevator:
         self.adjust_speed(simulation_step)
         self.adjust_request_floor_list()
         self.adjust_acceleration(acceleration=kwargs["acceleration"])
+
         print("speed:", self.cur_speed)
 
     def adjust_request_floor_list(self):

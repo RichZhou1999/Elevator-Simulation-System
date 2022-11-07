@@ -90,6 +90,60 @@ class Controller:
 class Controller_one_elevator(Controller):
     # will be called in function get_acceleration
     # SCAN algorithm
+
+    def get_upper_destination(self, system, elevator, request_signal_list_up,
+                              request_signal_list_down,
+                              cur_floor,
+                              elevator_request_signal_list):
+        request_down = request_signal_list_down[cur_floor + 1:]
+        elevator_request_signal_list_upper = elevator_request_signal_list[cur_floor + 1:]
+        # running passengers want to go upper floor
+        if elevator_request_signal_list_upper.count(1):
+            return elevator_request_signal_list_upper.index(1) + cur_floor + 1
+        # waiting passengers want to go lower from upper part, so calculate the highest floor with request
+        elif request_down.count(1):
+            max_index = 0
+            for i in range(len(request_down)):
+                if request_down[i] == 1:
+                    max_index = i
+            return max_index + cur_floor + 1
+        # no need to go upper
+        else:
+            if elevator.current_height != 0:
+                elevator.set_direction("down")
+                print("elevator direction switch to down")
+                return self.get_lower_destination(system, elevator, request_signal_list_up, request_signal_list_down, cur_floor,
+                                             elevator_request_signal_list)
+            else:
+                return 0
+
+    def get_lower_destination(self, system, elevator, request_signal_list_up,
+                              request_signal_list_down,
+                              cur_floor,
+                              elevator_request_signal_list):
+        request_down = request_signal_list_down[0: cur_floor + 1]
+        elevator_request_signal_list_lower = elevator_request_signal_list[0: cur_floor + 1]
+        # invert request_down, elevator_request_signal_list_lower from higher to lower
+        temp1 = request_down[::-1]
+        temp2 = elevator_request_signal_list_lower[::-1]
+        if request_down.count(1) and elevator_request_signal_list_lower.count(1):
+            return cur_floor - min(temp1.index(1), temp2.index(1))
+        # only passengers in the elevator want to go lower
+        elif elevator_request_signal_list_lower.count(1):
+            return cur_floor - temp2.index(1)
+        # only waiting passengers request go lower
+        elif request_down.count(1):
+            return cur_floor - temp1.index(1)
+        # no inner and outer request to go lower
+        else:
+            if cur_floor == 0 and elevator.current_height == 0:
+                elevator.set_direction("up")
+                print("elevator direction switch to up")
+                return self.get_upper_destination(system, elevator, request_signal_list_up, request_signal_list_down, cur_floor,
+                                             elevator_request_signal_list)
+            else:
+                return 0
+
     def get_destination_floor(self, system, elevator, ):
         # properties from system and elevator
         cur_height = elevator.current_height
@@ -111,69 +165,70 @@ class Controller_one_elevator(Controller):
                 cur_floor -= 1
         print("cur_floor:", cur_floor)
 
-        def get_upper_destination(request_signal_list_up,
-                                  request_signal_list_down,
-                                  cur_floor,
-                                  elevator_request_signal_list):
-            request_down = request_signal_list_down[cur_floor + 1:]
-            elevator_request_signal_list_upper = elevator_request_signal_list[cur_floor + 1:]
-            # running passengers want to go upper floor
-            if elevator_request_signal_list_upper.count(1):
-                return elevator_request_signal_list_upper.index(1) + cur_floor + 1
-            # waiting passengers want to go lower from upper part, so calculate the highest floor with request
-            elif request_down.count(1):
-                max_index = 0
-                for i in range(len(request_down)):
-                    if request_down[i] == 1:
-                        max_index = i
-                return max_index + cur_floor + 1
-            # no need to go upper
-            else:
-                if elevator.current_height != 0:
-                    elevator.set_direction("down")
-                    print("elevator direction switch to down")
-                    return get_lower_destination(request_signal_list_up, request_signal_list_down, cur_floor,
-                                                 elevator_request_signal_list)
-                else:
-                    return 0
-
-        def get_lower_destination(request_signal_list_up,
-                                  request_signal_list_down,
-                                  cur_floor,
-                                  elevator_request_signal_list):
-            request_down = request_signal_list_down[0: cur_floor + 1]
-            elevator_request_signal_list_lower = elevator_request_signal_list[0: cur_floor + 1]
-            # invert request_down, elevator_request_signal_list_lower from higher to lower
-            temp1 = request_down[::-1]
-            temp2 = elevator_request_signal_list_lower[::-1]
-            if request_down.count(1) and elevator_request_signal_list_lower.count(1):
-                return cur_floor - min(temp1.index(1), temp2.index(1))
-            # only passengers in the elevator want to go lower
-            elif elevator_request_signal_list_lower.count(1):
-                return cur_floor - temp2.index(1)
-            # only waiting passengers request go lower
-            elif request_down.count(1):
-                return cur_floor - temp1.index(1)
-            # no inner and outer request to go lower
-            else:
-                if cur_floor == 0 and elevator.current_height == 0:
-                    elevator.set_direction("up")
-                    print("elevator direction switch to up")
-                    return get_upper_destination(request_signal_list_up, request_signal_list_down, cur_floor,
-                                                 elevator_request_signal_list)
-                else:
-                    return 0
+        # def get_upper_destination(elevator, request_signal_list_up,
+        #                           request_signal_list_down,
+        #                           cur_floor,
+        #                           elevator_request_signal_list):
+        #     request_down = request_signal_list_down[cur_floor + 1:]
+        #     elevator_request_signal_list_upper = elevator_request_signal_list[cur_floor + 1:]
+        #     # running passengers want to go upper floor
+        #     if elevator_request_signal_list_upper.count(1):
+        #         return elevator_request_signal_list_upper.index(1) + cur_floor + 1
+        #     # waiting passengers want to go lower from upper part, so calculate the highest floor with request
+        #     elif request_down.count(1):
+        #         max_index = 0
+        #         for i in range(len(request_down)):
+        #             if request_down[i] == 1:
+        #                 max_index = i
+        #         return max_index + cur_floor + 1
+        #     # no need to go upper
+        #     else:
+        #         if elevator.current_height != 0:
+        #             elevator.set_direction("down")
+        #             print("elevator direction switch to down")
+        #             return get_lower_destination(request_signal_list_up, request_signal_list_down, cur_floor,
+        #                                          elevator_request_signal_list)
+        #         else:
+        #             return 0
+        #
+        # def get_lower_destination(request_signal_list_up,
+        #                           request_signal_list_down,
+        #                           cur_floor,
+        #                           elevator_request_signal_list):
+        #     request_down = request_signal_list_down[0: cur_floor + 1]
+        #     elevator_request_signal_list_lower = elevator_request_signal_list[0: cur_floor + 1]
+        #     # invert request_down, elevator_request_signal_list_lower from higher to lower
+        #     temp1 = request_down[::-1]
+        #     temp2 = elevator_request_signal_list_lower[::-1]
+        #     if request_down.count(1) and elevator_request_signal_list_lower.count(1):
+        #         return cur_floor - min(temp1.index(1), temp2.index(1))
+        #     # only passengers in the elevator want to go lower
+        #     elif elevator_request_signal_list_lower.count(1):
+        #         return cur_floor - temp2.index(1)
+        #     # only waiting passengers request go lower
+        #     elif request_down.count(1):
+        #         return cur_floor - temp1.index(1)
+        #     # no inner and outer request to go lower
+        #     else:
+        #         if cur_floor == 0 and elevator.current_height == 0:
+        #             elevator.set_direction("up")
+        #             print("elevator direction switch to up")
+        #             return get_upper_destination(request_signal_list_up, request_signal_list_down, cur_floor,
+        #                                          elevator_request_signal_list)
+        #         else:
+        #             return 0
 
         if elevator.direction == "up" or elevator.direction == None:
-            destination_floor = get_upper_destination(request_signal_list_up,
-                                                      request_signal_list_down,
-                                                      cur_floor,
-                                                      elevator_request_signal_list)
+            destination_floor = self.get_upper_destination(system, elevator,
+                                                           request_signal_list_up,
+                                                           request_signal_list_down,
+                                                           cur_floor,
+                                                           elevator_request_signal_list)
         elif elevator.direction == "down":
-            destination_floor = get_lower_destination(request_signal_list_up,
-                                                      request_signal_list_down,
-                                                      cur_floor,
-                                                      elevator_request_signal_list)
+            destination_floor = self.get_lower_destination(system, elevator, request_signal_list_up,
+                                                           request_signal_list_down,
+                                                           cur_floor,
+                                                           elevator_request_signal_list)
         print("destination_floor: ", destination_floor)
         return destination_floor
 

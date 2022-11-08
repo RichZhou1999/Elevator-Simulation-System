@@ -32,7 +32,9 @@ system_para = {"arrival_rate_up": 0.1,
                "simulation_step": 1,
                "elevator_max_wait_time": 10,
                "controller": ControllerByTheWay,
-               "safety_deceleration_distance": 1}
+               "safety_deceleration_distance": 1,
+               "show_process_output": False
+               }
 
 system = System(system_para)
 system.add_elevator(elevator)

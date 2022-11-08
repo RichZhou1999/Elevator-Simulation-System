@@ -24,6 +24,7 @@ class System:
         self.request_signal_list_down = []
         self.current_simulation_time = 0
         self.elevator_safety_deceleration_distance = system_para["safety_deceleration_distance"]
+        self.show_process_output = system_para["show_process_output"]
 
     def reset(self):
         # reset the list value when running new experiment
@@ -31,11 +32,13 @@ class System:
         floor_num = len(height_floor_dict.values())
         for elevator in self.elevators:
             elevator.request_floor_list = [0] * floor_num
+            elevator.reset()
         self.request_signal_list_down = [0] * floor_num
         self.request_signal_list_up = [0] * floor_num
         self.wait_passengers = []
         self.run_passengers = []
         self.past_passengers = []
+        self.current_simulation_time = 0
 
     def add_elevator(self, elevator):
         if elevator.name not in self.elevator_name_list:
@@ -43,7 +46,6 @@ class System:
             self.elevators.append(elevator)
         else:
             raise Exception("name already exist")
-
 
     def print_state(self):
         print("request_signal_list_up:", self.request_signal_list_up)
@@ -86,12 +88,15 @@ class System:
             #     passenger_des = set()
             #     for passenger in elevator.current_passenger_list:
             #         passenger_des.add(passenger.destination_floor)
-            self.print_state()
+            if self.show_process_output:
+                self.print_state()
         wait_time = []
         for passenger in self.past_passengers:
-            print(passenger)
+            if self.show_process_output:
+                print(passenger)
             wait_time.append(passenger.get_on_elevator_time - passenger.start_time)
         print("average_wait_time: ", np.mean(wait_time))
+        return np.mean(wait_time)
 
     def check_elevator_wait_state(self, elevator):
         # only wait for new coming passenger when elevator's waiting time is less than max waiting time

@@ -26,6 +26,16 @@ class Elevator:
         self.name = name
         self._feasible_floor = feasible_floor
 
+    def reset(self):
+        self.acceleration = 0
+        self.cur_speed = 0
+        self.current_height = 0
+        self.set_state("run")
+        self.set_direction("up")
+        self.destination_floor = None
+        self.current_passenger_list = []
+        self.current_accommodation = 0
+
     @property
     def feasible_floor(self):
         return self._feasible_floor

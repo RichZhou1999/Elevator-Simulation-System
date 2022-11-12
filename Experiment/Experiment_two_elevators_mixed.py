@@ -1,8 +1,9 @@
+import numpy as np
 from Building.Building import Building
 from Elevator.Elevator import Elevator
 from System.System import System
 from Controller.Controller import Controller_one_elevator
-from Controller.ControllerByTheWay import ControllerByTheWay
+from Controller.ControllerMultipleElevators import ControllerMultipleElevators
 '''
 Construct the system gradually with building, elevator, controller
 direction: up is positive and down is negative applying to acceleration, 
@@ -40,12 +41,12 @@ elevator2 = Elevator(capacity=16,
 system_para = {"arrival_rate_up": 0.1,
                "arrival_rate_down": 0.1,
                "building": building,
-               "simulation_time": 1000,
+               "simulation_time": 10000,
                "simulation_step": 1,
                "elevator_max_wait_time": 2,
-               "controller": ControllerByTheWay,
+               "controller": ControllerMultipleElevators,
                "safety_deceleration_distance": 1,
-               "show_process_output": False
+               "show_process_output": True
                }
 
 system = System(system_para)

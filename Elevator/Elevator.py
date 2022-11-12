@@ -15,7 +15,7 @@ class Elevator:
         self.acceleration = 0
         self.current_accommodation = 0
         self.current_height = 0
-        self._state = "run"
+        self._state = "wait"
         # current wait time of one elevator in a single floor
         self.cur_waited_time = 0
         self.destination_floor = None
@@ -30,7 +30,7 @@ class Elevator:
         self.acceleration = 0
         self.cur_speed = 0
         self.current_height = 0
-        self.set_state("run")
+        self.set_state("wait")
         self.set_direction("up")
         self.destination_floor = None
         self.current_passenger_list = []
@@ -74,21 +74,27 @@ class Elevator:
             self.request_floor_list[passenger.destination_floor] = 1
 
     def adjust_acceleration(self, acceleration):
-        self.acceleration = round(acceleration, 4)
+        self.acceleration = round(acceleration, 3)
+        # if (self.current_height - int(self.current_height)) == 0 and (self.direction == 'down')\
+        #         and self.destination_floor == self.cur_floor:
+        #     self.acceleration = 0
 
     def adjust_speed(self, simulation_step):
         # change speed with second, the speed can't beyond max_speed
-        self.cur_speed = round(self.cur_speed + self.acceleration * simulation_step, 4)
+        self.cur_speed = round(self.cur_speed + self.acceleration * simulation_step, 3)
         if abs(self.cur_speed) > abs(self.max_speed):
-            self.cur_speed = round(self.max_speed * abs(self.cur_speed)/self.cur_speed, 4)
+            self.cur_speed = round(self.max_speed * abs(self.cur_speed)/self.cur_speed, 3)
         if abs(self.cur_speed) < 1e-3:
             self.cur_speed = 0
+        # if (self.current_height - int(self.current_height) == 0) and self.direction == 'down' and\
+        #          self.destination_floor == self.cur_floor:
+        #     self.cur_speed = 0
 
 
     def adjust_height(self, simulation_step):
         self.current_height = round(self.current_height +\
-                              self.cur_speed * simulation_step + self.acceleration/2*simulation_step**2, 4)
+                              self.cur_speed * simulation_step + self.acceleration/2*simulation_step**2, 3)
         # consider elevator reaches the floor if the absolute error equals to 0.01
-        if abs(self.current_height-round(self.current_height)) < 1e-4:
+        if abs(self.current_height-round(self.current_height)) < 1e-1:
             self.current_height = round(self.current_height)
 

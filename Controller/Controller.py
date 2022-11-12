@@ -56,7 +56,7 @@ class Controller:
         min_deceleration_distance = calculate_min_deceleration_distance(cur_speed,
                                                                         max_acceleration) \
                                     + safety_deceleration_distance + abs(cur_speed)
-        print("delta:", delta_height)
+        # print("delta:", delta_height)
         # special condition: arrived
         if delta_height == 0:
             return 0
@@ -81,7 +81,7 @@ class Controller:
                     elif cur_speed < 0:
                         acceleraion = -cur_speed ** 2 / 2 / delta_height
                     break
-        return round(acceleraion, 4)
+        return round(acceleraion, 5)
 
 
 "add new controllers and algorithms here"
@@ -161,7 +161,7 @@ class Controller_one_elevator(Controller):
             if abs(cur_height - system.building.floor_height_dict[cur_floor + 1]) - min_deceleration_distance < -1e-2:
                 cur_floor += 1
         if cur_floor - 1 >= 0 and cur_floor + 1 < len(floor_height_list) and elevator.direction == "down":
-            if abs(cur_height - system.building.floor_height_dict[cur_floor - 1]) - min_deceleration_distance < -1e-2:
+            if abs(cur_height - system.building.floor_height_dict[cur_floor]) - min_deceleration_distance < -1e-2:
                 cur_floor -= 1
         elevator.cur_floor = cur_floor
         # print("%s cur_floor:" % elevator.name, cur_floor)
@@ -245,6 +245,7 @@ class Controller_one_elevator(Controller):
             destination_floor = self.get_destination_floor(system, elevator)
             elevator.destination_floor = destination_floor
             destination_height = system.building.floor_height_dict[destination_floor]
+            elevator.delta_height = destination_height - cur_height
             max_acceleration = elevator.max_acceleration
             max_speed = elevator.max_speed
             # calculate the acceleration at certain timestep, result will be returned in System.adjust_elevator_state
@@ -256,5 +257,5 @@ class Controller_one_elevator(Controller):
                                                        safety_deceleration_distance
                                                        )
             accelerations.append(acceleration)
-        print("accelerations: ", accelerations)
+        # print("accelerations: ", accelerations)
         return accelerations

@@ -2,7 +2,7 @@ from Building.Building import Building
 from Elevator.Elevator import Elevator
 from System.System import System
 from Controller.Controller import Controller_one_elevator
-from Controller.ControllerByTheWay import ControllerByTheWay
+from Controller.ControllerMultipleElevators import ControllerMultipleElevators
 '''
 Construct the system gradually with building, elevator, controller
 direction: up is positive and down is negative applying to acceleration, 
@@ -43,16 +43,16 @@ system_para = {"arrival_rate_up": 0.1,
                "simulation_time": 10000,
                "simulation_step": 1,
                "elevator_max_wait_time": 2,
-               "controller": ControllerByTheWay,
-               "safety_deceleration_distance": 1,
-               "show_process_output": False}
+               "controller": ControllerMultipleElevators,
+               "safety_deceleration_distance": 2,
+               "show_process_output": True}
 
 system = System(system_para)
 system.add_elevator(elevator)
-system.add_elevator(elevator2)
+# system.add_elevator(elevator2)
 # system.add_elevator(elevator3)
 result = []
-for i in range(5):
+for i in range(2):
     result.append(system.run())
 print("wait time list ", result)
 print("mean of wait time: ", np.mean(result))

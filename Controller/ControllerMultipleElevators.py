@@ -1,12 +1,21 @@
 from Controller.Controller import Controller, Controller_one_elevator
 
 
-class ControllerByTheWay(Controller_one_elevator):
+class ControllerMultipleElevators(Controller_one_elevator):
+
+    @staticmethod
+    def by_the_way_elevator_exist(system, floor_num):
+        for elevator in system.elevators:
+            elevator_request_list = elevator.request_floor_list
+            elevator_request_list = elevator_request_list[floor_num:]
+            if elevator_request_list.count(1):
+                return elevator
+        return None
+
     @staticmethod
     def get_highest_elevator(system):
         highest_elevator = system.elevators[0]
         for elevator in system.elevators:
-
             if elevator.current_height > highest_elevator.current_height:
                 highest_elevator = elevator
             elif elevator.current_height == highest_elevator.current_height:
@@ -36,28 +45,58 @@ class ControllerByTheWay(Controller_one_elevator):
         if elevator_request_signal_list_upper.count(1):
             return elevator_request_signal_list_upper.index(1) + cur_floor + 1
         # waiting passengers want to go lower from upper part, so calculate the highest floor with request
-        # elif request_down.count(1) and self.get_highest_elevator(system) == elevator:
-        elif request_down.count(1) and self.get_highest_elevator(system) == elevator:
-            # if system.highest_elevator == elevator:
-            # and system.highest_elevator == None and self.get_highest_elevator(system) == elevator:
-            # self.get_highest_elevator(system) == elevator:
+        else:
             max_index = 0
             for i in range(len(request_down)):
                 if request_down[i] == 1:
                     max_index = i
-            return max_index + cur_floor + 1
-        # no need to go upper
-        else:
-            if elevator.current_height != 0:
-                # if elevator == system.highest_elevator:
-                #     system.highest_elevator = None
-                elevator.set_direction("down")
-                print("elevator direction switch to down")
-                return self.get_lower_destination(system, elevator, request_signal_list_up, request_signal_list_down,
-                                                  cur_floor,
-                                                  elevator_request_signal_list)
+            # return max_index + cur_floor + 1
+            if system.highest_elevator == elevator and elevator.destination_floor != elevator.cur_floor:
+                return elevator.destination_floor
+            elif request_down.count(1) and self.by_the_way_elevator_exist(system, max_index) == None and\
+                system.highest_elevator==None:
+                if system.highest_elevator==None:
+                    system.highest_elevator = elevator
+                return max_index + cur_floor + 1
+            # elif request_down.count(1) and self.by_the_way_elevator_exist(system, max_index) == elevator:
+            #     return max_index + cur_floor + 1
             else:
-                return 0
+                if elevator.current_height != 0:
+                    if elevator == system.highest_elevator:
+                        system.highest_elevator = None
+                    elevator.set_direction("down")
+                    print("elevator direction switch to down")
+                    return self.get_lower_destination(system, elevator, request_signal_list_up,
+                                                      request_signal_list_down,
+                                                      cur_floor,
+                                                      elevator_request_signal_list)
+                else:
+                    return 0
+
+        # elif request_down.count(1) and self.get_highest_elevator(system) == elevator:
+        # elif request_down.count(1) and (self.get_highest_elevator(system) == elevator or system.highest_elevator == None):
+            # if system.highest_elevator == elevator:
+            # and system.highest_elevator == None and self.get_highest_elevator(system) == elevator:
+            # self.get_highest_elevator(system) == elevator:
+            # if system.highest_elevator == None:
+            #     system.highest_elevator = elevator
+            # max_index = 0
+            # for i in range(len(request_down)):
+            #     if request_down[i] == 1:
+            #         max_index = i
+            # return max_index + cur_floor + 1
+        # no need to go upper
+        # else:
+        #     if elevator.current_height != 0:
+        #         if elevator == system.highest_elevator:
+        #             system.highest_elevator = None
+        #         elevator.set_direction("down")
+        #         print("elevator direction switch to down")
+        #         return self.get_lower_destination(system, elevator, request_signal_list_up, request_signal_list_down,
+        #                                           cur_floor,
+        #                                           elevator_request_signal_list)
+        #     else:
+        #         return 0
 
     def get_lower_destination(self, system, elevator, request_signal_list_up,
                               request_signal_list_down,

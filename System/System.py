@@ -25,6 +25,7 @@ class System:
         self.current_simulation_time = 0
         self.elevator_safety_deceleration_distance = system_para["safety_deceleration_distance"]
         self.show_process_output = system_para["show_process_output"]
+        self.highest_elevator = None
 
     def reset(self):
         # reset the list value when running new experiment
@@ -39,6 +40,7 @@ class System:
         self.run_passengers = []
         self.past_passengers = []
         self.current_simulation_time = 0
+        self.highest_elevator = None
 
     def add_elevator(self, elevator):
         if elevator.name not in self.elevator_name_list:
@@ -52,20 +54,24 @@ class System:
         print("request_signal_list_down:", self.request_signal_list_down)
         print("time: ", self.current_simulation_time)
         for elevator in self.elevators:
-            print("-"*10+elevator.name+"-"*10)
-            print("state:", elevator.state)
-            print("direction:", elevator.direction)
-            print("current_floor:", elevator.cur_floor)
-            print("destination_floor:", elevator.destination_floor)
-            print("elevator_request_list: ", elevator.request_floor_list)
-            print("height: ", elevator.current_height)
-            print("speed:", elevator.cur_speed)
-            print("acceleration:", elevator.acceleration)
-            passenger_des = set()
-            for passenger in elevator.current_passenger_list:
-                passenger_des.add(passenger.destination_floor)
-            print("%s destination_for_passengers_inside:"% elevator.name, passenger_des)
-            print("-"*30)
+            # if elevator.name == "elevator2":
+                print("-"*10+elevator.name+"-"*10)
+                print("state:", elevator.state)
+                print("direction:", elevator.direction)
+                print("current_floor:", elevator.cur_floor)
+                print("destination_floor:", elevator.destination_floor)
+                print("elevator_request_list: ", elevator.request_floor_list)
+                print("height: ", elevator.current_height)
+                print("speed:", elevator.cur_speed)
+                print("acceleration:", elevator.acceleration)
+                passenger_des = set()
+                for passenger in elevator.current_passenger_list:
+                    passenger_des.add(passenger.destination_floor)
+                print("%s destination_for_passengers_inside:"% elevator.name, passenger_des)
+                print("delta height: ", elevator.delta_height)
+                print("-"*30)
+
+
 
     def run(self):
         self.reset()
@@ -92,9 +98,11 @@ class System:
                 self.print_state()
         wait_time = []
         for passenger in self.past_passengers:
-            if self.show_process_output:
-                print(passenger)
+            # if self.show_process_output:
+            #     print(passenger)
             wait_time.append(passenger.get_on_elevator_time - passenger.start_time)
+        for passenger in self.wait_passengers:
+            wait_time.append(self.current_simulation_time - passenger.start_time)
         print("average_wait_time: ", np.mean(wait_time))
         return np.mean(wait_time)
 
@@ -121,9 +129,13 @@ class System:
             if elevator.destination_floor != None and \
                     elevator.current_height - self.building.floor_height_dict[elevator.destination_floor] == 0 and \
                     elevator.state != "wait":
+                if elevator.cur_speed != 0:
+                    elevator.cur_speed = 0
+                if elevator.acceleration != 0:
+                    elevator.acceleration = 0
                 cur_floor = self.building.height_floor_dict[elevator.current_height]
                 print("-" * 30)
-                print("%s: cur_floor: "%elevator.name, cur_floor)
+                print("%s: cur_floor: "% elevator.name, cur_floor)
                 print("_" * 30)
                 self.adjust_request_signal(cur_floor, elevator.direction, signal_type="minus")
                 # arrive at cur_floor

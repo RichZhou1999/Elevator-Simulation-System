@@ -2,7 +2,7 @@ import numpy as np
 from Building.Building import Building
 from Elevator.Elevator import Elevator
 from System.System import System
-from Controller.Controller import Controller_one_elevator
+# from Controller.Controller import Controller_one_elevator
 from Controller.ControllerMultipleElevators import ControllerMultipleElevators
 
 '''
@@ -22,7 +22,7 @@ height_floor_dict = {}
 total_floor = 20
 for i in range(total_floor+1):
     height_floor_dict[3*i] = i
-feasible_floor = [1]*total_floor
+feasible_floor = [1]*(total_floor+1)
 building = Building(height_floor_dict)
 
 elevator = Elevator(capacity=16,
@@ -52,20 +52,22 @@ elevator4 = Elevator(capacity=16,
 system_para = {"arrival_rate_up": 0.1,
                "arrival_rate_down": 0.1,
                "building": building,
-               "simulation_time": 2000,
+               "simulation_time": 10000,
                "simulation_step": 1,
-               "elevator_max_wait_time": 2,
+               "elevator_max_wait_time": 10,
                "controller": ControllerMultipleElevators,
                "safety_deceleration_distance": 1,
-               "show_process_output": True}
+               "show_process_output": False}
 
 system = System(system_para)
 system.add_elevator(elevator)
 system.add_elevator(elevator2)
 system.add_elevator(elevator3)
 system.add_elevator(elevator4)
+
+
 result = []
-for i in range(2):
+for i in range(10):
     result.append(system.run())
 print("wait time list ", result)
 print("mean of wait time: ", np.mean(result))

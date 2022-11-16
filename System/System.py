@@ -234,6 +234,22 @@ class System:
                 self.adjust_request_signal(i, "down", signal_type="add")
         self.wait_passengers += passengers
 
+    # def passenger_generator_down(self):
+    #     # generate passengers going up from a random floor except for 1st to 1st floor using poisson process with certain arrival rate
+    #     passengers = []
+    #     max_floor = len(self.building.height_floor_dict.keys()) - 1
+    #     single_floor_arrival_rate = self.arrival_rate_down / (max_floor - 1)
+    #     for i in range(1, max_floor + 1):
+    #         number = np.random.poisson(single_floor_arrival_rate)
+    #         for j in range(number):
+    #             temp_p = Passenger(uuid.uuid4(),
+    #                                starting_floor=i,
+    #                                destination_floor=0,
+    #                                start_time=self.current_simulation_time)
+    #             passengers.append(temp_p)
+    #             self.adjust_request_signal(i, "down", signal_type="add")
+    #     self.wait_passengers += passengers
+
     def adjust_request_signal(self, floor, direction, signal_type="add"):
         # the request up and down from outside
         # floor refers to the starting floor

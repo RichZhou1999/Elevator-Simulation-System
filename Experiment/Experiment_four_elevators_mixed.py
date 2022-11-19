@@ -4,6 +4,7 @@ from Elevator.Elevator import Elevator
 from System.System import System
 # from Controller.Controller import Controller_one_elevator
 from Controller.ControllerMultipleElevators import ControllerMultipleElevators
+import copy
 
 '''
 Construct the system gradually with building, elevator, controller
@@ -44,10 +45,10 @@ elevator3 = Elevator(capacity=16,
                     feasible_floor=feasible_floor)
 
 elevator4 = Elevator(capacity=16,
-                    max_speed=2,
-                    name="elevator4",
-                    max_acceleration=0.5,
-                    feasible_floor=feasible_floor)
+                     max_speed=2,
+                     name="elevator4",
+                     max_acceleration=0.5,
+                     feasible_floor=feasible_floor)
 
 system_para = {"arrival_rate_up": 0.1,
                "arrival_rate_down": 0.1,
@@ -59,11 +60,17 @@ system_para = {"arrival_rate_up": 0.1,
                "safety_deceleration_distance": 1,
                "show_process_output": False}
 
+elevator_number = 4
 system = System(system_para)
-system.add_elevator(elevator)
-system.add_elevator(elevator2)
-system.add_elevator(elevator3)
-system.add_elevator(elevator4)
+for i in range(elevator_number):
+    temp_elevator = copy.copy(elevator)
+    temp_elevator.name = i
+    system.add_elevator(temp_elevator)
+
+# system.add_elevator(elevator)
+# system.add_elevator(elevator2)
+# system.add_elevator(elevator3)
+# system.add_elevator(elevator4)
 
 
 result = []

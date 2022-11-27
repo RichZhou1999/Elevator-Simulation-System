@@ -1,6 +1,6 @@
 import numpy as np
-from Passenger import Passenger
-from Controller import Controller, Controller_one_elevator
+from Passenger.Passenger import Passenger
+from Controller.Controller import Controller, Controller_one_elevator
 import uuid
 
 
@@ -24,6 +24,8 @@ class System:
         self.request_signal_list_down = []
         self.current_simulation_time = 0
         self.elevator_safety_deceleration_distance = system_para["safety_deceleration_distance"]
+        self.show_process_output = system_para["show_process_output"]
+        self.highest_elevator = None
 
     def reset(self):
         # reset the list value when running new experiment
@@ -31,11 +33,14 @@ class System:
         floor_num = len(height_floor_dict.values())
         for elevator in self.elevators:
             elevator.request_floor_list = [0] * floor_num
+            elevator.reset()
         self.request_signal_list_down = [0] * floor_num
         self.request_signal_list_up = [0] * floor_num
         self.wait_passengers = []
         self.run_passengers = []
         self.past_passengers = []
+        self.current_simulation_time = 0
+        self.highest_elevator = None
 
     def add_elevator(self, elevator):
         if elevator.name not in self.elevator_name_list:
@@ -44,31 +49,62 @@ class System:
         else:
             raise Exception("name already exist")
 
+    def print_state(self):
+        print("request_signal_list_up:", self.request_signal_list_up)
+        print("request_signal_list_down:", self.request_signal_list_down)
+        print("time: ", self.current_simulation_time)
+        for elevator in self.elevators:
+            # if elevator.name == "elevator2":
+                print("-"*10+elevator.name+"-"*10)
+                print("state:", elevator.state)
+                print("direction:", elevator.direction)
+                print("current_floor:", elevator.cur_floor)
+                print("destination_floor:", elevator.destination_floor)
+                print("elevator_request_list: ", elevator.request_floor_list)
+                print("height: ", elevator.current_height)
+                print("speed:", elevator.cur_speed)
+                print("acceleration:", elevator.acceleration)
+                passenger_des = set()
+                for passenger in elevator.current_passenger_list:
+                    passenger_des.add(passenger.destination_floor)
+                print("%s destination_for_passengers_inside:"% elevator.name, passenger_des)
+                print("delta height: ", elevator.delta_height)
+                print("-"*30)
+
+
+
     def run(self):
         self.reset()
         for i in range(self.simulation_time):
+            print("-" * 10 + str(self.current_simulation_time) + "-" * 10)
             self.passenger_generator_up()
             self.passenger_generator_down()
             self.adjust_passenger_state()
             self.adjust_elevator_state()
             self.current_simulation_time += 1
-            print("state:", self.elevators[0].state)
-            print("direction:", self.elevators[0].direction)
-            print("time: ", self.current_simulation_time)
-            print("elevator_request_list: ", self.elevators[0].request_floor_list)
-            print("request_signal_list_up:", self.request_signal_list_up)
-            print("request_signal_list_down:", self.request_signal_list_down)
+            # print("state:", self.elevators[0].state)
+            # print("direction:", self.elevators[0].direction)
+            # print("time: ", self.current_simulation_time)
+            # print("elevator_request_list: ", self.elevators[0].request_floor_list)
+            # print("request_signal_list_up:", self.request_signal_list_up)
+            # print("request_signal_list_down:", self.request_signal_list_down)
             passenger_des = []
             # destinations of passengers in the elevator
-            for passenger in self.elevators[0].current_passenger_list:
-                passenger_des.append(passenger.destination_floor)
-            print("destination_for_passengers_inside:", passenger_des)
-            print("-" * 30)
+            # for elevator in self.elevators:
+            #     passenger_des = set()
+            #     for passenger in elevator.current_passenger_list:
+            #         passenger_des.add(passenger.destination_floor)
+            if self.show_process_output:
+                self.print_state()
         wait_time = []
         for passenger in self.past_passengers:
-            print(passenger)
+            # if self.show_process_output:
+            #     print(passenger)
             wait_time.append(passenger.get_on_elevator_time - passenger.start_time)
+        for passenger in self.wait_passengers:
+            wait_time.append(self.current_simulation_time - passenger.start_time)
         print("average_wait_time: ", np.mean(wait_time))
+        return np.mean(wait_time)
 
     def check_elevator_wait_state(self, elevator):
         # only wait for new coming passenger when elevator's waiting time is less than max waiting time
@@ -93,9 +129,13 @@ class System:
             if elevator.destination_floor != None and \
                     elevator.current_height - self.building.floor_height_dict[elevator.destination_floor] == 0 and \
                     elevator.state != "wait":
+                if elevator.cur_speed != 0:
+                    elevator.cur_speed = 0
+                if elevator.acceleration != 0:
+                    elevator.acceleration = 0
                 cur_floor = self.building.height_floor_dict[elevator.current_height]
                 print("-" * 30)
-                print("cur_floor: ", cur_floor)
+                print("%s: cur_floor: "% elevator.name, cur_floor)
                 print("_" * 30)
                 self.adjust_request_signal(cur_floor, elevator.direction, signal_type="minus")
                 # arrive at cur_floor
@@ -115,7 +155,6 @@ class System:
             if elevator.state == "wait":
                 continue
             elevator.adjust_acceleration(acceleration=accelerations[i])
-            print("height: ", elevator.current_height)
 
     def adjust_passenger_state(self):
         for elevator in self.elevators:
@@ -128,7 +167,7 @@ class System:
                                                signal_type="minus")
                     # inner request disappears
                     elevator.request_floor_list[self.building.height_floor_dict[elevator.current_height]] = 0
-                    print("Passengers come out at floor %s" % self.building.height_floor_dict[elevator.current_height])
+                    print("%s: Passengers come out at floor %s" % (elevator.name, self.building.height_floor_dict[elevator.current_height]))
                     get_out_passengers = []
                     temp_cur_passengers = []
                     # passenger get off when reaching desination
@@ -194,6 +233,22 @@ class System:
                 passengers.append(temp_p)
                 self.adjust_request_signal(i, "down", signal_type="add")
         self.wait_passengers += passengers
+
+    # def passenger_generator_down(self):
+    #     # generate passengers going up from a random floor except for 1st to 1st floor using poisson process with certain arrival rate
+    #     passengers = []
+    #     max_floor = len(self.building.height_floor_dict.keys()) - 1
+    #     single_floor_arrival_rate = self.arrival_rate_down / (max_floor - 1)
+    #     for i in range(1, max_floor + 1):
+    #         number = np.random.poisson(single_floor_arrival_rate)
+    #         for j in range(number):
+    #             temp_p = Passenger(uuid.uuid4(),
+    #                                starting_floor=i,
+    #                                destination_floor=0,
+    #                                start_time=self.current_simulation_time)
+    #             passengers.append(temp_p)
+    #             self.adjust_request_signal(i, "down", signal_type="add")
+    #     self.wait_passengers += passengers
 
     def adjust_request_signal(self, floor, direction, signal_type="add"):
         # the request up and down from outside
